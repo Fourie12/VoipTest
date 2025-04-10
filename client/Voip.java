@@ -4,60 +4,82 @@ import javax.sound.sampled.*;
 import java.net.*;
 
 public class Voip {
-	public Voip(String ip) {
+	private DatagramSocket socket;
+	private SourceDataLine speaker;
+	private TargetDataLine microphone;
+	private Thread sendThread, receiveThread;
+	private volatile boolean running = true;
+
+	public Voip(String ip, int port1, int port2) {
 		try {
-			int port = 50005;
-			DatagramSocket socket = new DatagramSocket(port);
+			int port = port1;
+			socket = new DatagramSocket(port);
 
 			AudioFormat format = new AudioFormat(44100.0f, 16, 1, true, false);
-		    DataLine.Info infoOut = new DataLine.Info(SourceDataLine.class, format);
 
-			SourceDataLine speaker = (SourceDataLine) AudioSystem.getLine(infoOut);
+			DataLine.Info infoOut = new DataLine.Info(SourceDataLine.class, format);
+			speaker = (SourceDataLine) AudioSystem.getLine(infoOut);
 			speaker.open(format);
 			speaker.start();
 
-		    DataLine.Info infoIn = new DataLine.Info(TargetDataLine.class, format);
-		    TargetDataLine microphone = (TargetDataLine) AudioSystem.getLine(infoIn);
-		    microphone.open(format);
+			DataLine.Info infoIn = new DataLine.Info(TargetDataLine.class, format);
+			microphone = (TargetDataLine) AudioSystem.getLine(infoIn);
+			microphone.open(format);
 			microphone.start();
 
 			InetAddress clientAddress = InetAddress.getByName(ip);
-			int clientPort = 50006;
+			int clientPort = port2;
 
-			Thread receiveThread = new Thread(() -> {
+			receiveThread = new Thread(() -> {
 				try {
 					byte[] buffer = new byte[4096];
 					DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-				    while (true) {
+					while (running) {
 						socket.receive(packet);
 						speaker.write(packet.getData(), 0, packet.getLength());
 					}
 				} catch (Exception e) {
-					e.printStackTrace();
-			    }
+					if (running) e.printStackTrace(); // Ignore if stopping
+				}
 			});
 
-			Thread sendThread = new Thread(() -> {
+			sendThread = new Thread(() -> {
 				try {
 					byte[] buffer = new byte[4096];
-					while (true) {
+					while (running) {
 						microphone.read(buffer, 0, buffer.length);
 						DatagramPacket packet = new DatagramPacket(buffer, buffer.length, clientAddress, clientPort);
 						socket.send(packet);
 					}
 				} catch (Exception e) {
-					e.printStackTrace();
+					if (running) e.printStackTrace();
 				}
 			});
 
 			receiveThread.start();
-		    sendThread.start();
-		} catch (LineUnavailableException lue) {
-			lue.printStackTrace();
-		} catch (UnknownHostException uhe) {
-			uhe.printStackTrace();
-		} catch (SocketException se) {
-			se.printStackTrace();
+			sendThread.start();
+
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-    }
+	}
+
+	public void stop() {
+		running = false;
+
+		if (microphone != null) {
+			microphone.stop();
+			microphone.close();
+		}
+		if (speaker != null) {
+			speaker.stop();
+			speaker.close();
+		}
+		if (socket != null && !socket.isClosed()) {
+			socket.close();
+		}
+
+		System.out.println("VoIP stopped.");
+	}
 }
+
