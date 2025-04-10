@@ -11,13 +11,14 @@ public class Call {
 		System.out.println("What are the ports?");
 		System.out.print("port1: ");
 		int port1 = scanner.nextInt();
-		System.out.print("\nport2: ");
+		System.out.print("port2: ");
 		int port2 = scanner.nextInt();
 
 		System.out.println("Calling " + ip + "...");
 		Voip voip = new Voip(ip, port1, port2);
 
 		System.out.println("Press Enter to end the call.");
+		scanner.nextLine(); // Wait for user to press Enter
 		scanner.nextLine(); // Wait for user to press Enter
 
 		voip.stop();
