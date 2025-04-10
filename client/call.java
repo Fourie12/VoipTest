@@ -1,6 +1,6 @@
-package server;
+package client;
 
-import server.Voip;
+import client.Voip;
 import java.util.Scanner;
 
 public class call {

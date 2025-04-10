@@ -1,4 +1,4 @@
-package server;
+package client;
 
 import javax.sound.sampled.*;
 import java.net.*;
