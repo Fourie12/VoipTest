@@ -8,11 +8,10 @@ import java.net.*;
  */
 public class Receiver {
 	private static final int BUFFER_SIZE = 8096;
-	private int port;
+	private int port = 8080;
 	private String saveDirectory;
 
-	public Receiver(int port, String saveDirectory) {
-		this.port = port;
+	public Receiver(String saveDirectory) {
 		this.saveDirectory = saveDirectory;
 
 		// Create save directory if it doesn't exist
@@ -20,9 +19,7 @@ public class Receiver {
 		if (!directory.exists()) {
 			directory.mkdirs();
 		}
-	}
 
-	public void start() {
 		try (ServerSocket serverSocket = new ServerSocket(port)) {
 			System.out.println("Receiver started on port " + port);
 			System.out.println("Waiting for connection...");
@@ -78,18 +75,8 @@ public class Receiver {
 	}
 
 	public static void main(String[] args) {
-		int port = 8080;
 		String saveDirectory = "received_files";
 
-		// Allow command line arguments to override defaults
-		if (args.length >= 1) {
-			port = Integer.parseInt(args[0]);
-		}
-		if (args.length >= 2) {
-			saveDirectory = args[1];
-		}
-
-		Receiver receiver = new Receiver(port, saveDirectory);
-		receiver.start();
+		Receiver receiver = new Receiver(saveDirectory);
 	}
 }

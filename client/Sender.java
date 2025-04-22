@@ -9,11 +9,14 @@ import java.net.*;
 public class Sender {
 	private static final int BUFFER_SIZE = 8096;
 	private String serverAddress;
-	private int port;
+	private int port = 8080;
+	private String filePath;
 
-	public Sender(String serverAddress, int port) {
+	public Sender(String serverAddress, String filePath) {
 		this.serverAddress = serverAddress;
-		this.port = port;
+		this.filePath = filePath;
+
+		sendFile(filePath);
 	}
 
 	public void sendFile(String filePath) {
@@ -91,23 +94,18 @@ public class Sender {
 
 	public static void main(String[] args) {
 		if (args.length < 1) {
-			System.out.println("Usage: java Sender <file-path> [server-address] [port]");
+			System.out.println("Usage: java Sender <file-path> <server-address>");
 			return;
 		}
 
 		String filePath = args[0];
 		String serverAddress = "localhost";
-		int port = 8080;
 
 		// Allow command line arguments to override defaults
 		if (args.length >= 2) {
 			serverAddress = args[1];
 		}
-		if (args.length >= 3) {
-			port = Integer.parseInt(args[2]);
-		}
 
-		Sender sender = new Sender(serverAddress, port);
-		sender.sendFile(filePath);
+		Sender sender = new Sender(serverAddress, filePath);
 	}
 }
